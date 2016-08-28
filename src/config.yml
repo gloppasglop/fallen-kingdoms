@@ -1,0 +1,56 @@
+# Fallen Kingdoms Config File
+
+maxPlayer: 10
+world: world
+startTimer: 10
+stopTimer: 30
+stopServer: true
+kickPlayers: true
+ScoreBoardName: ====FkPlugin====
+
+friendlyFire: false
+pvpDay: 2
+AssaultDay: 5
+
+###############################################
+#Le NPC vous permetera de choisir votre team. #
+###############################################
+SpawnNPC:
+  enable: true
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  name: Choix des teams !
+
+baseSize: 30
+
+enableBase:
+  Blue: true
+  Red: false
+  Green: false
+  Yellow: false
+
+Blue:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  world: world
+
+Red:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  world: world
+
+Green:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  world: world
+
+Yellow:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  world: world
+

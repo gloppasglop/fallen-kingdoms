@@ -1,0 +1,8 @@
+name: Main
+main: com.gloppasglop.fk.Main
+version: 0.1
+commands:
+  fk:
+    description: Fallen Kingdom Command
+    usage: /fk
+
