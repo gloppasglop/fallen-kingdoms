@@ -1,5 +1,6 @@
 package com.gloppasglop.fk.utils;
 
+import com.gloppasglop.fk.FK;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -11,7 +12,6 @@ import org.bukkit.scoreboard.Scoreboard;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.gloppasglop.fk.Main;
 /**
  * Created by christopheroux on 27/08/16.
  */
@@ -19,9 +19,11 @@ public class ScoreboardHandler {
 
     private Scoreboard scoreboard;
     private Objective objective;
+    private FK plugin;
 
-    public ScoreboardHandler() {
+    public ScoreboardHandler(FK plugin) {
 
+        this.plugin = plugin;
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         objective = scoreboard.registerNewObjective("fk","dummy");
 
@@ -47,9 +49,9 @@ public class ScoreboardHandler {
         //score.setScore(-1);
         //objective.setDisplayName(ChatColor.DARK_AQUA + getCurrentFormattedDate("hh:mm:ss"));
         objective.setDisplayName(ChatColor.DARK_AQUA +
-                "Day " + String.format("%d", Main.gametime.days()) +
-                " - " + String.format("%02d",Main.gametime.minutes()) +
-                ":" + String.format("%02d",Main.gametime.seconds()));
+                "Day " + String.format("%d", plugin.gametime.days()) +
+                " - " + String.format("%02d", plugin.gametime.minutes()) +
+                ":" + String.format("%02d", plugin.gametime.seconds()));
     }
 
     private String getCurrentFormattedDate(String format) {

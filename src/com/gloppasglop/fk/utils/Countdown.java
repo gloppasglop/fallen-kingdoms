@@ -1,9 +1,8 @@
 package com.gloppasglop.fk.utils;
 
-import com.gloppasglop.fk.Main;
+import com.gloppasglop.fk.FK;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -11,10 +10,10 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class Countdown extends BukkitRunnable {
 
-    private final Plugin plugin;
+    private final FK plugin;
     private int counter;
 
-    public Countdown(Plugin plugin, int counter) {
+    public Countdown(FK plugin, int counter) {
         this.plugin = plugin;
         if (counter < 1) {
             throw new IllegalArgumentException("Counter must be greater than 1!");
@@ -30,7 +29,7 @@ public class Countdown extends BukkitRunnable {
             plugin.getServer().broadcastMessage(ChatColor.GOLD + "Game start in " + counter--);
         } else {
             plugin.getServer().broadcastMessage(ChatColor.GOLD + "Starting game. Have fun!");
-            Main.gametime.start();
+            plugin.gametime.start();
             this.cancel();
         }
 

@@ -59,11 +59,7 @@ public class GameTime {
     }
 
     public boolean isPvp() {
-        if (this.days() >= pvpDay ) {
-            return true;
-        } else {
-            return false;
-        }
+        return this.days() >= pvpDay;
     }
 
     public boolean isAssault() {

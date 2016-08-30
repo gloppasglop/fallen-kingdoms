@@ -1,5 +1,5 @@
 name: Main
-main: com.gloppasglop.fk.Main
+main: com.gloppasglop.fk.FK
 version: 0.1
 commands:
   fk:

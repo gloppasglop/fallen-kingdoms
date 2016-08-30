@@ -1,6 +1,6 @@
 package com.gloppasglop.fk.event.player;
 
-import com.gloppasglop.fk.Main;
+import com.gloppasglop.fk.FK;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -10,9 +10,14 @@ import org.bukkit.event.player.PlayerJoinEvent;
  */
 public class JoinEvent implements Listener {
 
+    private FK plugin;
+
+    public JoinEvent(FK plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Main.getScoreboardHandler().sendPlayerScoreboard(event.getPlayer());
+        plugin.getScoreboardHandler().sendPlayerScoreboard(event.getPlayer());
     }
 }

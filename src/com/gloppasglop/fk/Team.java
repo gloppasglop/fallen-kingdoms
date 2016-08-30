@@ -2,7 +2,9 @@ package com.gloppasglop.fk;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,18 +12,23 @@ import java.util.List;
  */
 public class Team {
 
+    private String name;
     private Location center;
     private org.bukkit.scoreboard.Team team;
-    private int size=10;
-    private List<Player> members;
-    private boolean isEnabled;
+    private Integer size=20;
+    private List<Player> members = new ArrayList<>();
+    private Location chestLocation;
+    private BukkitTask effectTask;
 
-    public Team(Location center, org.bukkit.scoreboard.Team team) {
-        this.center = center;
-        this.team = team;
+    public Team(String name) {
+        this.name = name;
     }
 
-    public int getSize() {
+    public String getName() {
+        return name;
+    }
+
+    public Integer getSize() {
         return size;
     }
 
@@ -53,15 +60,20 @@ public class Team {
         this.team = team;
     }
 
-    public void enable() {
-        this.isEnabled = true;
+    public Location getChestLocation() {
+        return chestLocation;
     }
 
-    public void disable() {
-        this.isEnabled = false;
+    public void setChestLocation(Location chestLocation) {
+        this.chestLocation = chestLocation;
     }
 
-    public boolean isEnabled() {
-        return this.isEnabled;
+    public BukkitTask getEffectTask() {
+        return effectTask;
     }
+
+    public void setEffectTask(BukkitTask effectTask) {
+        this.effectTask = effectTask;
+    }
+
 }
