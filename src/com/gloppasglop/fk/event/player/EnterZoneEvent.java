@@ -54,6 +54,7 @@ public class EnterZoneEvent implements Listener {
                 previousTeamBase.put(playername,currentBaseName);
                 player.sendMessage(ChatColor.YELLOW+"Entering base of team "+ currentBaseName);
 
+
             }
         } else {
             String previousBaseName = previousTeamBase.get(playername);

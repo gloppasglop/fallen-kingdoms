@@ -167,5 +167,4 @@ public class FK extends JavaPlugin{
         saveConfig();
     }
 
-//            Team team=new Team(teamBukkit);
 }

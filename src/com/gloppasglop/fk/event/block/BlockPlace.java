@@ -86,6 +86,7 @@ public class BlockPlace implements Listener{
 
                     teamPlayer.setEffectTask(effectTask);
 
+
                 }
             }
         }
