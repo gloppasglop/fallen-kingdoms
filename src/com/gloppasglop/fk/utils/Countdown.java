@@ -29,7 +29,7 @@ public class Countdown extends BukkitRunnable {
             plugin.getServer().broadcastMessage(ChatColor.GOLD + "Game start in " + counter--);
         } else {
             plugin.getServer().broadcastMessage(ChatColor.GOLD + "Starting game. Have fun!");
-            plugin.gametime.start();
+            plugin.setGameState(FK.GameState.RUNNING);
             this.cancel();
         }
 

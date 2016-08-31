@@ -7,6 +7,7 @@ import com.gloppasglop.fk.event.player.ChatEvent;
 import com.gloppasglop.fk.event.player.EnterZoneEvent;
 import com.gloppasglop.fk.event.player.JoinEvent;
 import com.gloppasglop.fk.event.player.PlayerDamage;
+import com.gloppasglop.fk.utils.ConfigManager;
 import com.gloppasglop.fk.utils.GameTime;
 import com.gloppasglop.fk.utils.ScoreboardHandler;
 import org.bukkit.Bukkit;
@@ -16,6 +17,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -24,8 +26,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -34,12 +38,37 @@ import java.util.List;
 public class FK extends JavaPlugin{
 
 
-    private TeamManager teamManager = new TeamManager();
+    public enum GameState {LOBBY,STARTING, RUNNING, PAUSED, STOPPED};
+    private TeamManager teamManager = new TeamManager(this);
+    private ConfigManager configManager = new ConfigManager(this);
     private ScoreboardHandler scoreboardHandler;
+
+    private GameState gameState;
+
+    public void setGameState(GameState state) {
+        this.gameState = state;
+        configManager.getData().set("state",state.toString());
+    }
+
+    public void setGameState(String state) {
+        //TODO: ctch invalid values
+        this.setGameState(GameState.valueOf(state));
+    }
+
+    public GameState getGameState() {
+        return gameState;
+    }
 
     public GameTime gametime;
 
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
     private List<Team> teams = new ArrayList<>();
+
+    private File configfile, gameconfigfile;
+    private FileConfiguration config, gameconfig;
 
     public ScoreboardHandler getScoreboardHandler() {
         return scoreboardHandler;
@@ -73,9 +102,33 @@ public class FK extends JavaPlugin{
     public void onEnable() {
 
         getLogger().info(getDescription().getName() + " has been enabled!");
+        registerConfig();
         getCommand("fk").setExecutor(new com.gloppasglop.fk.commands.Fk(this));
 
-        gametime = new GameTime();
+        gametime = new GameTime(this,0);
+
+        String gameStateConfig = configManager.getData().getString("state");
+
+        if (gameStateConfig == null) {
+            configManager.getData().set("state","LOBBY");
+            configManager.getData().set("time",0);
+            configManager.saveData();
+            setGameState(GameState.LOBBY);
+            gametime.setTime(0);
+        } else {
+            setGameState(gameStateConfig);
+            Integer timeConfig = configManager.getData().getInt("time");
+            if ( timeConfig == null) {
+                configManager.getData().set("time",0);
+                configManager.saveData();
+                gametime.setTime(0);
+            } else {
+                gametime.setTime(timeConfig);
+            }
+        }
+
+        teamManager.loadConfig();
+
 
         setScoreboardHandler(new ScoreboardHandler(this));
 
@@ -87,7 +140,12 @@ public class FK extends JavaPlugin{
             }
             boolean prevIsPvp = gametime.isPvp();
             boolean prevIsAssault = gametime.isAssault();
-            gametime.inc();
+            if (gameState == GameState.RUNNING) {
+                gametime.inc();
+                configManager.getData().set("time",gametime.getTime());
+                configManager.saveData();
+            }
+
             if ( gametime.isPvp() && ! prevIsPvp ) {
                 Bukkit.broadcastMessage(ChatColor.YELLOW + "PVP mode started. Let's fight!!!");
             }
@@ -121,7 +179,8 @@ public class FK extends JavaPlugin{
                           new EnterZoneEvent(this),
                           new PlayerDamage(this));
 
-        registerConfig();
+
+
 
         //initTeams();
 
@@ -163,8 +222,8 @@ public class FK extends JavaPlugin{
     }
 
     private void registerConfig() {
-        getConfig().options().copyDefaults(true);
-        saveConfig();
+        configManager.setup();
     }
+
 
 }

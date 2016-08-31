@@ -3,10 +3,12 @@ package com.gloppasglop.fk.commands;
 import com.gloppasglop.fk.FK;
 import com.gloppasglop.fk.Team;
 import com.gloppasglop.fk.TeamManager;
+import com.gloppasglop.fk.utils.ConfigManager;
 import com.gloppasglop.fk.utils.Countdown;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -44,11 +46,13 @@ public class Fk implements TabExecutor {
         BukkitTask task;
         TeamManager tm = plugin.getTeamManager();
         Set<Team> teams = tm.getTeams();
+        ConfigManager cm = plugin.getConfigManager();
 
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("start")) {
                 // check at least 2 teams defined
-                if (teams.size() <2 ) {
+                //TODO : testing set check 0
+                if (teams.size() <0 ) {
                     sender.sendMessage(ChatColor.DARK_RED+ "At least 2 teams must be defined before starting.");
                     return false;
                 }
@@ -66,10 +70,11 @@ public class Fk implements TabExecutor {
                     return false;
                 }
 
+                plugin.setGameState(FK.GameState.STARTING);
                 task = new Countdown(plugin, 10).runTaskTimer(plugin, 0, 20);
                 return true;
             } else if (args[0].equalsIgnoreCase("stop")) {
-                plugin.gametime.stop();
+                plugin.setGameState(FK.GameState.STOPPED);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "The game is stopped!");
             } else {
                 sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
@@ -80,8 +85,8 @@ public class Fk implements TabExecutor {
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("pause")) {
                 if (args[1].equalsIgnoreCase("on")) {
-                    if (plugin.gametime.isRunning()) {
-                        plugin.gametime.stop();
+                    if (plugin.getGameState() == FK.GameState.RUNNING) {
+                        plugin.setGameState(FK.GameState.PAUSED);
                         Bukkit.broadcastMessage(ChatColor.GOLD + "The game is paused!");
                         return true;
                     }
@@ -90,11 +95,11 @@ public class Fk implements TabExecutor {
                 }
 
                 if (args[1].equalsIgnoreCase("off")) {
-                    if (plugin.gametime.isRunning()) {
+                    if (plugin.getGameState() == FK.GameState.RUNNING) {
                         sender.sendMessage(ChatColor.DARK_RED + "Game is already running");
                         return false;
                     } else {
-                        plugin.gametime.restart();
+                        plugin.setGameState(FK.GameState.RUNNING);
                         Bukkit.broadcastMessage(ChatColor.GOLD + "The game has restarted!");
                         return true;
                     }
@@ -107,6 +112,8 @@ public class Fk implements TabExecutor {
                 try {
                     int time = Integer.parseInt(args[1]);
                     plugin.gametime.setTime(time);
+                    plugin.getConfigManager().getData().set("time",time);
+                    plugin.getConfigManager().saveData();;
                     return true;
                 } catch (NumberFormatException n) {
                     sender.sendMessage(ChatColor.DARK_RED + "Invalid Number specified!");
@@ -146,8 +153,12 @@ public class Fk implements TabExecutor {
 
                     sender.sendMessage(ChatColor.YELLOW + "Details for team \"" + teamname + "\":");
                     sender.sendMessage(ChatColor.YELLOW + "    Members:");
-                    for (Player pls : team.getMembers()) {
-                        sender.sendMessage(ChatColor.YELLOW + "    - " + pls.getName());
+                    for (OfflinePlayer pls : team.getMembers()) {
+                        if (pls.isOnline()) {
+                            sender.sendMessage(ChatColor.YELLOW + "    - " + pls.getName());
+                        } else {
+                            sender.sendMessage(ChatColor.YELLOW + "    - " + pls.getUniqueId());
+                        }
                     }
 
                     if (team.getCenter() == null) {

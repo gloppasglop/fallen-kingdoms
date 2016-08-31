@@ -1,6 +1,7 @@
 package com.gloppasglop.fk;
 
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -16,7 +17,7 @@ public class Team {
     private Location center;
     private org.bukkit.scoreboard.Team team;
     private Integer size=20;
-    private List<Player> members = new ArrayList<>();
+    private List<OfflinePlayer> members = new ArrayList<>();
     private Location chestLocation;
     private BukkitTask effectTask;
 
@@ -48,11 +49,11 @@ public class Team {
         return team;
     }
 
-    public List<Player> getMembers() {
+    public List<OfflinePlayer> getMembers() {
         return members;
     }
 
-    public void setMembers(List<Player> members) {
+    public void setMembers(List<OfflinePlayer> members) {
         this.members = members;
     }
 

@@ -1,32 +1,37 @@
 package com.gloppasglop.fk.utils;
 
+import com.gloppasglop.fk.FK;
+import org.bukkit.plugin.Plugin;
+
 /**
  * Created by christopheroux on 27/08/16.
  */
 public class GameTime {
 
     private int time;
-    private boolean isRunning;
     private int pvpDay;
     private int assaultDay;
     private int durationDay;
+    private FK plugin;
 
-    public GameTime() {
-        time = 0;
-        isRunning = false;
-        pvpDay = 2;
-        assaultDay = 5;
-        durationDay = 20;
+    public GameTime(FK plugin, int time ) {
+        this.time = time;
+        this.plugin = plugin;
+        this.pvpDay = plugin.getConfigManager().getConfig().getInt("pvpday");
+        this.assaultDay = plugin.getConfigManager().getConfig().getInt("assaultday");
+        this.durationDay = plugin.getConfigManager().getConfig().getInt("durationday");
+        plugin.getLogger().info("durationday" + durationDay);
     }
 
     public void setTime(int time) {
-        if (time >0 ) {
-            this.time = time;
-        }
+        this.time = time;
+        plugin.getConfigManager().getData().set("time",time);
+        plugin.getConfigManager().saveData();;
+
     }
 
-    public boolean isRunning(){
-        return this.isRunning;
+    public int getTime() {
+        return this.time;
     }
 
     public int days() {
@@ -42,20 +47,9 @@ public class GameTime {
     }
 
     public void inc() {
-        if (isRunning) time++;
-    }
-
-    public void stop() {
-        isRunning = false;
-    }
-
-    public void start() {
-        isRunning = true;
-        time = 0;
-    }
-
-    public void restart() {
-        isRunning = true;
+        time++;
+        plugin.getConfigManager().getData().set("time",time);
+        plugin.getConfigManager().saveData();;
     }
 
     public boolean isPvp() {
