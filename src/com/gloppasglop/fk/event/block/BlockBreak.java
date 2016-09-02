@@ -1,7 +1,10 @@
 package com.gloppasglop.fk.event.block;
 
 import com.gloppasglop.fk.FK;
+import com.gloppasglop.fk.Team;
+import com.gloppasglop.fk.TeamManager;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -26,15 +29,34 @@ public class BlockBreak implements Listener{
         Block block = event.getBlock();
         Material material = block.getType();
 
-        if ( material == Material.CHEST) {
-            Chest chest = (Chest) block.getState();
-            player.sendMessage(ChatColor.RED + chest.getBlockInventory().getTitle());
+
+        if (plugin.getGameState() != FK.GameState.RUNNING) {
+            player.sendMessage(ChatColor.DARK_RED + "Game has not yet started.");
             event.setCancelled(true);
+            return;
         }
 
-        if (  material != Material.GRASS ) {
-            event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "You can only break Grass!");
+        Location loc = block.getLocation();
+
+        TeamManager tm = plugin.getTeamManager();
+        Team teamHere = tm.getTeamByLocation(loc);
+        Team teamPlayer = tm.getTeamByPlayer(player);
+
+
+        if (teamHere == null ) {
+            return;
+        } else {
+            if ( teamHere == teamPlayer ) {
+                return;
+            } else {
+                if ( ! plugin.gametime.isAssault())  {
+                    player.sendMessage(ChatColor.DARK_RED+"Assault time not yet started.");
+                    event.setCancelled(true);
+                } else {
+                    //TODO: Handle fallen Kingdom check break
+                }
+            }
         }
+
     }
 }

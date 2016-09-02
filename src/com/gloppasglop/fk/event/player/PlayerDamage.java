@@ -20,19 +20,26 @@ public class PlayerDamage implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player && event.getEntity() instanceof  Player) {
+
+
+        if (event.getDamager() instanceof Player) {
+
             Player damager = (Player) event.getDamager();
-            Player damagee = (Player) event.getEntity();
-            if ( plugin.getGameState() != FK.GameState.RUNNING) {
-                damager.sendMessage(ChatColor.DARK_RED+ "Game has not started or is paused!");
+            if (plugin.getGameState() != FK.GameState.RUNNING) {
                 event.setCancelled(true);
+                damager.sendMessage(ChatColor.DARK_RED+ "Game has not started or is paused!");
             } else {
-                if ( ! (plugin.gametime.isPvp() || plugin.gametime.isAssault())) {
+                if (!(plugin.gametime.isPvp() || plugin.gametime.isAssault()) && event.getEntity() instanceof Player) {
                     damager.sendMessage(ChatColor.DARK_RED + "PVP has not yet started!");
-                    event.setCancelled(true);
                 }
             }
+        } else {
+            if (plugin.getGameState() != FK.GameState.RUNNING) {
+                event.setCancelled(true);
+            }
         }
+
     }
+
 }
 

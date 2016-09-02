@@ -5,21 +5,18 @@ import com.gloppasglop.fk.Team;
 import com.gloppasglop.fk.TeamManager;
 import com.gloppasglop.fk.utils.ConfigManager;
 import com.gloppasglop.fk.utils.Countdown;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,7 +42,7 @@ public class Fk implements TabExecutor {
         Player player = (Player) sender;
         BukkitTask task;
         TeamManager tm = plugin.getTeamManager();
-        Set<Team> teams = tm.getTeams();
+        Map<String,Team> teams = tm.getTeams();
         ConfigManager cm = plugin.getConfigManager();
 
         if (args.length == 1) {
@@ -58,8 +55,9 @@ public class Fk implements TabExecutor {
                 }
 
                 //get teams with no players
-                List<String> notEnoughPlayerTeams = teams.stream()
-                        .filter(team -> team.getMembers().size() == 0 )
+                List<String> notEnoughPlayerTeams = teams.entrySet().stream()
+                        .filter(m -> m.getValue().getMembers().size() == 0 )
+                        .map(Map.Entry::getValue)
                         .map(Team::getName)
                         .collect(Collectors.toList());
 
@@ -71,11 +69,41 @@ public class Fk implements TabExecutor {
                 }
 
                 plugin.setGameState(FK.GameState.STARTING);
+
+                teams.forEach( (k,v) -> {
+                   v.getMembers().forEach( offp -> {
+                       if (offp.isOnline()) {
+                           Player p = Bukkit.getPlayer(offp.getUniqueId());
+
+                           // find a place to teleport
+
+                           Location loc = plugin.getTeamManager().getTeamByPlayer(p).getCenter();
+                           loc.setY(200);
+                           p.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+                           p.setFlying(false);
+                           p.setAllowFlight(false);
+                           p.setGameMode(GameMode.SURVIVAL);
+                       }
+                   });
+                });
+
                 task = new Countdown(plugin, 10).runTaskTimer(plugin, 0, 20);
                 return true;
             } else if (args[0].equalsIgnoreCase("stop")) {
                 plugin.setGameState(FK.GameState.STOPPED);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "The game is stopped!");
+            } else if (args[0].equalsIgnoreCase("reset")) {
+                plugin.gametime.setTime(0);
+                plugin.getConfigManager().getData().set("time", 0);
+                plugin.getConfigManager().saveData();
+                ;
+                plugin.setGameState(FK.GameState.LOBBY);
+                Bukkit.broadcastMessage(ChatColor.GOLD + "The game is reset!");
+                return true;
+            } else if (args[0].equalsIgnoreCase("menu")) {
+                Inventory menu = plugin.getTeamGui();
+                player.openInventory(menu);
+
             } else {
                 sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
                 return false;
@@ -122,12 +150,13 @@ public class Fk implements TabExecutor {
             }
             if (args[0].equalsIgnoreCase("team")) {
                 if (args[1].equalsIgnoreCase("list")) {
+                    plugin.getLogger().info("Team list: size: "+teams.size());
                     if (teams.size() == 0) {
                         sender.sendMessage(ChatColor.DARK_RED + "No teams defined!");
                         return true;
                     } else {
                         sender.sendMessage(ChatColor.DARK_RED + "List of defined teams:");
-                        for (Team team : teams) {
+                        for (Team team : teams.values()) {
                             sender.sendMessage(ChatColor.DARK_RED + "    - " + team.getName());
                         }
                         return true;
@@ -135,6 +164,19 @@ public class Fk implements TabExecutor {
                 }
                 sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
                 return false;
+            }
+
+
+            if (args[0].equalsIgnoreCase("whitelist")) {
+                if (args[1].equalsIgnoreCase("list")) {
+                    sender.sendMessage(
+                            "Allowed block: " + String.join(",", plugin.getAllowedBlocksOutside()
+                                    .stream()
+                                    .map(Enum::toString)
+                                    .sorted(String::compareTo)
+                                    .collect(Collectors.toList())));
+                    return true;
+                }
             }
             sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
             return false;
@@ -165,7 +207,7 @@ public class Fk implements TabExecutor {
                         sender.sendMessage(ChatColor.YELLOW + "    Base location: " + ChatColor.RED + "Not set!");
                     } else {
                         sender.sendMessage(ChatColor.YELLOW + "    Base location: " + team.getCenter().getX() +
-                                ",_," + team.getCenter().getX());
+                                ",_," + team.getCenter().getZ());
 
                     }
                     return true;
@@ -209,6 +251,58 @@ public class Fk implements TabExecutor {
                 sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
                 return false;
             }
+
+            if (args[0].equalsIgnoreCase("whitelist")) {
+                if (args[1].equalsIgnoreCase("add")) {
+                    Material blockType = Material.getMaterial(args[2]);
+
+                    if (blockType != null) {
+
+                        if (plugin.getAllowedBlocksOutside().contains(blockType)) {
+                            sender.sendMessage(ChatColor.DARK_RED+"Block \""+args[2]+"\" is already whitelisted");
+                            return false;
+                        } else {
+                            plugin.getAllowedBlocksOutside().add(blockType);
+                            plugin.getConfigManager()
+                                  .getConfig()
+                                  .set("allowedOutsideBlocks",plugin.getAllowedBlocksOutside().stream().map(Enum::toString).toArray());
+                            plugin.getConfigManager().saveConfig();;
+                            sender.sendMessage(ChatColor.DARK_RED+"Block \""+args[2]+"\" added to whitelisted");
+                            return true;
+                        }
+
+                    } else {
+                        sender.sendMessage(ChatColor.DARK_RED+"Invalid block type \""+args[2]+"\"");
+                        return false;
+                    }
+
+                }
+
+                if (args[1].equalsIgnoreCase("remove")) {
+                    Material blockType = Material.getMaterial(args[2]);
+
+                    if (blockType != null) {
+
+                        if (!plugin.getAllowedBlocksOutside().contains(blockType)) {
+                            sender.sendMessage(ChatColor.DARK_RED+"Block \""+args[2]+"\" is not whitelisted");
+                            return false;
+                        } else {
+                            plugin.getAllowedBlocksOutside().remove(blockType);
+                            plugin.getConfigManager()
+                                    .getConfig()
+                                    .set("allowedOutsideBlocks",plugin.getAllowedBlocksOutside().stream().map(Enum::toString).toArray());
+                            plugin.getConfigManager().saveConfig();
+                            sender.sendMessage(ChatColor.DARK_RED+"Block \""+args[2]+"\" removed");
+                            return true;
+                        }
+
+                    } else {
+                        sender.sendMessage(ChatColor.DARK_RED+"Invalid block type \""+args[2]+"\"");
+                        return false;
+                    }
+
+                }
+            }
             sender.sendMessage(ChatColor.DARK_RED + "Invalid command!");
             return false;
         }
@@ -240,7 +334,7 @@ public class Fk implements TabExecutor {
                     Team existingTeam = tm.getTeamByPlayer(member);
 
                     if ( existingTeam == null ) {
-                        tm.getTeamByName(teamname).getMembers().add(member);
+                        tm.addTeamMember(tm.getTeamByName(teamname),member);
                         sender.sendMessage(ChatColor.DARK_RED+"Player \""+playername+"\" added to team \""+teamname+"\"");
                         return true;
                     } else {
@@ -258,19 +352,14 @@ public class Fk implements TabExecutor {
                     }
 
                     //get Player
-                    Player member = Bukkit.getOnlinePlayers()
+                    OfflinePlayer member = tm.getTeamByName(teamname).getMembers()
                             .stream()
                             .filter(p -> p.getName().equalsIgnoreCase(playername))
                             .findFirst()
                             .orElse(null);
 
-                    if ( member == null ) {
-                        sender.sendMessage(ChatColor.DARK_RED+"Player \""+ playername +"\"is not connected");
-                        return false;
-                    }
-
-                    if (tm.getTeamByName(teamname).getMembers().contains(member)) {
-                        tm.getTeamByName(teamname).getMembers().remove(member);
+                    if ( member != null) {
+                        tm.removeTeamMember(tm.getTeamByName(teamname) , member);
                         sender.sendMessage(ChatColor.DARK_RED+ "Player \""+playername+"\" removed from team \""+teamname+"\"");
                         return true;
                     } else {
@@ -289,7 +378,6 @@ public class Fk implements TabExecutor {
 
         if (args.length == 5 ) {
             if ( args[0].equalsIgnoreCase("team") && args[1].equalsIgnoreCase("set-base") ) {
-                sender.sendMessage(ChatColor.DARK_RED + "FIVE!");
                 String teamname = args[2];
                 Integer x;
                 Integer z;
@@ -313,7 +401,7 @@ public class Fk implements TabExecutor {
                 }
 
                 Location loc = new Location(player.getWorld(), x,0,z);
-                tm.getTeamByName(teamname).setCenter(loc);
+                tm.addTeamCenter(tm.getTeamByName(teamname),loc);
                 sender.sendMessage(ChatColor.DARK_RED+"Base set for team \""+teamname+"\"");
                 return true;
 
@@ -339,7 +427,7 @@ public class Fk implements TabExecutor {
         TeamManager tm = plugin.getTeamManager();
 
         if (args.length == 1) {
-            possibilities = Arrays.asList("start", "stop", "pause", "team","settime");
+            possibilities = Arrays.asList("start", "stop", "pause", "team","settime", "whitelist");
             return complete(args[0],possibilities);
         }
 
@@ -354,6 +442,10 @@ public class Fk implements TabExecutor {
                                                      "add-member","remove-member"));
            }
 
+           if (args[0].equalsIgnoreCase("whitelist")) {
+                return complete(args[1],Arrays.asList("add","list","remove"));
+           }
+
         }
 
        if (args.length == 3 ) {
@@ -366,7 +458,7 @@ public class Fk implements TabExecutor {
                         || args[1].equalsIgnoreCase("remove-member")
                         || args[1].equalsIgnoreCase("info")
                         || args[1].equalsIgnoreCase("set-base")) {
-                    validNames.addAll(tm.getTeams().stream().map(Team::getName).collect(Collectors.toList()));
+                    validNames.addAll(tm.getTeams().entrySet().stream().map(Map.Entry::getValue).map(Team::getName).collect(Collectors.toList()));
                 }
                 return complete(args[2],validNames);
             }

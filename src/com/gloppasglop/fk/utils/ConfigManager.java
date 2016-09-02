@@ -28,10 +28,7 @@ public class ConfigManager {
     public void setup() {
 
         configfile = new File(plugin.getDataFolder(),"config.yml");
-        config = plugin.getConfig();
 
-        config.options().copyDefaults(true);
-        saveConfig();
 
         if (!plugin.getDataFolder().exists()) {
 
@@ -42,6 +39,15 @@ public class ConfigManager {
             }
 
         }
+
+        plugin.getLogger().info("Config file name: "+configfile.getAbsolutePath());
+        if (!configfile.exists()) {
+            plugin.getLogger().info("Config does not exist");
+            plugin.saveDefaultConfig();
+        }
+
+        config = plugin.getConfig();
+        config.options().copyDefaults(false);
 
         datafile = new File(plugin.getDataFolder(),"data.yml");
 
@@ -81,6 +87,7 @@ public class ConfigManager {
 
 
     public void saveConfig() {
+        plugin.getLogger().info("Save config called: "+ Thread.currentThread().getStackTrace()[1].getLineNumber());
         try {
             config.save(configfile);
         } catch (IOException e) {

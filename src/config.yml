@@ -3,25 +3,13 @@ validteams:
 - RED
 - YELLOW
 - GREEN
+allowedOutsideBlocks:
+- TORCH
+- TNT
+- WATER
+- LAVA
+
 pvpday: 2
 assaultday: 5
 durationday: 20
 teams:
-  RED:
-    base:
-      x: 75.0
-      z: 100.0
-      size: 20
-      world: world
-    members:
-    - uuid: 223d83d5-0992-42d9-b704-ea35d6796905
-      name: noemie2006
-  BLUE:
-    base:
-      x: 125.0
-      z: 100.0
-      size: 20
-      world: world
-    members:
-    - uuid: 8f4f9535-e241-3153-938b-51cabc6768d7
-      name: _gloppasglop

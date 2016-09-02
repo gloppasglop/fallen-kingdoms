@@ -34,17 +34,35 @@ public class BlockPlace implements Listener{
         Block block = event.getBlock();
         Material material = block.getType();
 
+        if (plugin.getGameState() != FK.GameState.RUNNING) {
+            player.sendMessage(ChatColor.DARK_RED + "Game has not yet started.");
+            event.setCancelled(true);
+            return;
+        }
+
+        Location loc = block.getLocation();
+
+        TeamManager tm = plugin.getTeamManager();
+        Team teamHere = tm.getTeamByLocation(loc);
+        Team teamPlayer = tm.getTeamByPlayer(player);
+
+        if ( teamHere == null )  {
+            //Outside of any base
+            if ( ! plugin.getAllowedBlocksOutside().contains(material)) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.DARK_RED + "You cannot place this block outside of your base");
+            }
+        } else if ( teamHere != teamPlayer) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.DARK_RED + "You cannot place this block outside of your base");
+        }
+
         // TODO : Check game status
 
         if (material == Material.CHEST) {
             Chest chest = (Chest) block.getState();
             if ( chest.getBlockInventory().getTitle().equals("§aFallen Kingdom Chest")) {
 
-                Location loc = block.getLocation();
-
-                TeamManager tm = plugin.getTeamManager();
-                Team teamHere = tm.getTeamByLocation(loc);
-                Team teamPlayer = tm.getTeamByPlayer(player);
 
                 if (teamPlayer == null) {
                     player.sendMessage(ChatColor.DARK_RED + "You must be part of a team to place this chest.");
@@ -59,6 +77,8 @@ public class BlockPlace implements Listener{
                     player.sendMessage(ChatColor.DARK_RED + "You can only have one chest in yout base.");
                     event.setCancelled(true);
                 } else {
+
+                    event.setCancelled(false);
 
                     BukkitTask effectTask = new BukkitRunnable() {
                         double phi = 0;
